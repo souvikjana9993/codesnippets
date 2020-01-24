@@ -24,3 +24,16 @@ for param in pdq:
             print('ARIMA{}x{}12 - AIC:{}'.format(param, param_seasonal, results.aic))
         except:
             continue
+            
+mod = sm.tsa.statespace.SARIMAX(y,
+                                order=(1, 1, 1),
+                                seasonal_order=(1, 1, 0, 12),
+                                enforce_stationarity=False,
+                                enforce_invertibility=False)
+results = mod.fit()
+print(results.summary().tables[1])
+
+results.plot_diagnostics(figsize=(16, 8))
+plt.show()
+
+
