@@ -51,3 +51,25 @@ for mapped_var in ordinal_vars:
     else:
         X[mapped_var + '_num'] = X[mapped_var].replace(ordinals[mapped_var])
         Xt[mapped_var + '_num'] = Xt[mapped_var].replace(ordinals[mapped_var])
+
+"""
+frequency encoding 
+df is the train data
+"""
+
+# Enconding frequencies instead of labels (so we have some numeric variables)
+def frequency_encoding(column, df, df_test=None):
+    frequencies = df[column].value_counts().reset_index()
+    df_values = df[[column]].merge(frequencies, how='left', 
+                                   left_on=column, right_on='index').iloc[:,-1].values
+    if df_test is not None:
+        df_test_values = df_test[[column]].merge(frequencies, how='left', 
+                                                 left_on=column, right_on='index').fillna(1).iloc[:,-1].values
+    else:
+        df_test_values = None
+    return df_values, df_test_values
+
+for column in X.columns:
+    train_values, test_values = frequency_encoding(column, X, Xt)
+    X[column+'_counts'] = train_values
+    Xt[column+'_counts'] = test_values
