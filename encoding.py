@@ -18,6 +18,7 @@ for cc in tqdm_notebook(columns):
 ordinal encoding example 
 X,Xt are train and target respectively
 ordinal_vars are the column list of ordinal variables
+ref : https://www.kaggle.com/lucamassaron/catboost-beats-auto-ml
 """
 
 ordinals = {
@@ -55,6 +56,7 @@ for mapped_var in ordinal_vars:
 """
 frequency encoding 
 df is the train data
+ref : https://www.kaggle.com/lucamassaron/catboost-beats-auto-ml
 """
 
 # Enconding frequencies instead of labels (so we have some numeric variables)
@@ -73,3 +75,37 @@ for column in X.columns:
     train_values, test_values = frequency_encoding(column, X, Xt)
     X[column+'_counts'] = train_values
     Xt[column+'_counts'] = test_values
+    
+"""
+target encoding example 
+X,Xt are train and target respectively
+ref :https://www.kaggle.com/lucamassaron/catboost-beats-auto-ml
+"""
+
+# Target encoding of selected variables
+X['fold_column'] = 0
+n_splits = 5
+kf = KFold(n_splits=n_splits, random_state=137)
+
+import category_encoders as cat_encs
+
+cat_feat_to_encode = binary_vars + ordinal_vars + nominal_vars + time_vars
+smoothing = 0.3
+
+enc_x = np.zeros(X[cat_feat_to_encode].shape)
+
+for i, (tr_idx, oof_idx) in enumerate(kf.split(X, y)):
+    encoder = cat_encs.TargetEncoder(cols=cat_feat_to_encode, smoothing=smoothing)
+    
+    X.loc[oof_idx, 'fold_column'] = i
+    
+    encoder.fit(X[cat_feat_to_encode].iloc[tr_idx], y[tr_idx])
+    enc_x[oof_idx, :] = encoder.transform(X[cat_feat_to_encode].iloc[oof_idx], y[oof_idx])
+    
+encoder.fit(X[cat_feat_to_encode], y)
+enc_xt = encoder.transform(Xt[cat_feat_to_encode]).values
+
+for idx, new_var in enumerate(cat_feat_to_encode):
+    new_var = new_var + '_enc'
+    X[new_var] = enc_x[:,idx]
+    Xt[new_var] = enc_xt[:, idx]
