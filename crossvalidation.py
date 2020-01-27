@@ -3,6 +3,9 @@ ref: https://www.kaggle.com/tunguz/cat-ii-histgradientboostingclassifier-baselin
 Crossvalidation for numpy array type train,target
 note train does not have target
 """
+train_oof = np.zeros((train.shape[0],))
+test_preds = 0
+
 %%time
 n_splits = 5
 kf = KFold(n_splits=n_splits, random_state=137)
